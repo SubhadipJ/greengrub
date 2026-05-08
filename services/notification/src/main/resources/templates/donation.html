@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You for Your Donation!</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; margin:0; padding:0; background:#f4f4f4; color:#333; }
+        .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: #4CAF50; color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .content { padding: 30px; line-height: 1.6; }
+        .highlight { color: #4CAF50; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; }
+        .total-row { font-weight: bold; background: #f0f7f0; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+        .button { display: inline-block; background: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+        .small { font-size: 13px; color: #777; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Thank You!</h1>
+        <p>Your donation means the world to us</p>
+    </div>
+
+    <div class="content">
+        <p>Dear <strong th:text="${donorName}">John Doe</strong>,</p>
+
+        <p>Thank you so much for your generous donation to
+            <span class="highlight" th:text="${campaignName ?: organizationName}">Our Children Education Campaign</span>!
+        </p>
+
+        <p>Your support will help us make a real difference.</p>
+
+        <h3>Donation Details</h3>
+
+        <table>
+            <tr>
+                <th>Donation ID</th>
+                <td th:text="${donationId}">DON-2025-00421</td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td th:text="${donationDate}">15 March 2025, 02:30 PM</td>
+            </tr>
+            <tr th:if="${campaignName}">
+                <th>Campaign</th>
+                <td th:text="${campaignName}">Summer School Program 2025</td>
+            </tr>
+            <tr th:if="${totalAmount}">
+                <th>Total Monetary Value</th>
+                <td>₹ <span th:text="${totalAmount}"></span></td>
+            </tr>
+        </table>
+
+        <h3>Items Donated</h3>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Category</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${items}" th:if="${items != null and !items.isEmpty()}">
+                <td th:text="${item.name}">Notebooks</td>
+                <td th:text="${item.quantity}">120</td>
+                <td th:text="${item.unit ?: '-'}">pieces</td>
+                <td th:text="${item.category ?: '-'}">Stationery</td>
+            </tr>
+            <tr th:if="${items == null or items.isEmpty()}">
+                <td colspan="4" style="text-align:center; color:#888;">Monetary donation</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p style="text-align: center; margin: 40px 0;">
+            <a th:href="${websiteUrl}" class="button">Visit Our Website</a>
+        </p>
+
+        <p>With heartfelt gratitude,<br/>
+            <strong th:text="${organizationName}">Help Foundation</strong><br/>
+            <span class="small">support@yourorg.org | +91 44 1234 5678</span>
+        </p>
+    </div>
+
+    <div class="footer">
+        <p>You received this email because you made a donation to our organization.<br/>
+            If you have any questions, please contact us at
+            <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}"></a></p>
+    </div>
+</div>
+</body>
+</html>
