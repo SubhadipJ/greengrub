@@ -1,18 +1,17 @@
-package com.greengrub.image_service;
+package com.greengrub.image_service.service;
 
 //import com.google.api.services.storage.Storage;
 //import com.google.cloud.storage.BlobId;
 //import com.google.cloud.storage.BlobInfo;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("k8s")
 public class GcpStorageService {
 
 //    private final Storage storage;   // Auto-configured by Spring Cloud GCP
