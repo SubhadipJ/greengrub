@@ -1,12 +1,10 @@
-package com.greengrub.notification;
+package com.greengrub.image_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.junit.jupiter.api.Disabled;
 
 @SpringBootTest
-@Disabled
-class NotificationApplicationTests {
+class ImageServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
