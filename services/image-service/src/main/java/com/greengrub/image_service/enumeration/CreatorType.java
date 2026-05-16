@@ -1,4 +1,4 @@
-package com.greengrub.image_service;
+package com.greengrub.image_service.enumeration;
 
 public enum CreatorType {
     CUSTOMER,
