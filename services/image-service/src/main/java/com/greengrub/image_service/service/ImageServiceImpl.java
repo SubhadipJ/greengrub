@@ -1,23 +1,30 @@
 package com.greengrub.image_service.service;
 
-
+import com.google.cloud.Timestamp;
+import com.google.cloud.spring.data.firestore.FirestoreTemplate;
 import com.google.protobuf.ByteString;
-import com.greengrub.image_service.enumeration.CreatorType;
 import com.greengrub.image_service.entity.Image;
-import com.greengrub.image_service.helper.ImageHelper;
-import com.greengrub.image_service.repository.GCPStorageImageRepository;
+import com.greengrub.image_service.enumeration.CreatorType;
+import com.greengrub.image_service.exception.GcpUploadException;
+import com.greengrub.image_service.exception.ImageNotFoundException;
+import com.greengrub.image_service.exception.ImageStorageException;
+import com.greengrub.image_service.exception.InvalidImageRequestException;
+import com.greengrub.image_service.mapper.ImageMapper;
 import com.greengrub.proto.image.*;
-import io.grpc.Status;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.grpc.stub.StreamObserver;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.context.annotation.Profile;
+import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @GrpcService
@@ -25,45 +32,41 @@ import java.util.UUID;
 @Profile("k8s")
 public class ImageServiceImpl extends ImageServiceGrpc.ImageServiceImplBase {
 
-    private static GCPStorageImageRepository GCPStorageImageRepository;
-    private static GcpStorageService gcpStorageService;
+    private final FirestoreTemplate firestoreTemplate;
+    private final GcpStorageService gcpStorageService;
 
     @Override
     public void uploadImages(UploadImagesRequest request, StreamObserver<UploadImagesResponse> responseObserver) {
-
         String creatorId = request.getCreatorId();
         String creatorType = request.getCreatorType().toString();
         List<String> messages = new ArrayList<>();
         log.info("Received upload request for creatorId: {} | {} images", creatorId, request.getImageDataCount());
-        try {
-            for (ByteString byteString : request.getImageDataList()) {
-                byte[] imageBytes = byteString.toByteArray();
-                String imageId = UUID.randomUUID().toString();
 
-                if (imageBytes.length == 0) {
-                    continue;
-                }
-
-                // Upload to GCP Cloud Storage
-                String imageUrl = "This is test URL";
-//                        gcpStorageService.uploadImage(imageBytes, imageId, creatorId);
-
-                // Save metadata to MongoDB
-                Image entity = Image.builder()
-                        .imageId(imageId)
-                        .creatorId(creatorId)
-                        .creatorType(CreatorType.valueOf(creatorType))
-                        .fileName(request.getFileName())
-                        .contentType(request.getContentType())
-                        .imageUrl(imageUrl)
-                        .createdDate(LocalDateTime.now())
-                        .build();
-
-                GCPStorageImageRepository.save(entity);
-                messages.add(request.getFileName() + " | got stored with id : " + imageId);
-
-                log.info("Successfully uploaded image: {} | URL: {}", imageId, imageUrl);
+        for (ByteString byteString : request.getImageDataList()) {
+            byte[] imageBytes = byteString.toByteArray();
+            if (imageBytes.length == 0) {
+                continue;
             }
+            String imageId = UUID.randomUUID().toString();
+
+            // Upload to GCP Cloud Storage (with retry + circuit breaker + timeout)
+            String imageUrl = uploadToGcp(imageBytes, imageId, creatorId).join();
+
+            // Save metadata to Firestore (with retry + circuit breaker)
+            Image entity = Image.builder()
+                    .imageId(imageId)
+                    .creatorId(creatorId)
+                    .creatorType(CreatorType.valueOf(creatorType))
+                    .fileName(request.getFileName())
+                    .contentType(request.getContentType())
+                    .imageUrl(imageUrl)
+                    .createdDate(Timestamp.now())
+                    .build();
+
+            saveToFirestore(entity);
+            messages.add(request.getFileName() + " | got stored with id : " + imageId);
+            log.info("Successfully uploaded image: {} | URL: {}", imageId, imageUrl);
+        }
 
         UploadImagesResponse response = UploadImagesResponse.newBuilder()
                 .addAllMessage(messages)
@@ -71,133 +74,149 @@ public class ImageServiceImpl extends ImageServiceGrpc.ImageServiceImplBase {
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
-
-    } catch (Exception e) {
-        log.error("Error while uploading images for creatorId: {}", creatorId, e);
-        responseObserver.onError(io.grpc.Status.INTERNAL
-                .withDescription("Failed to upload images: " + e.getMessage())
-                .asRuntimeException());
-        }
     }
 
     @Override
     public void getImagesByCreator(GetImagesByCreatorRequest request, StreamObserver<GetImagesByCreatorResponse> responseObserver) {
         String creatorId = request.getCreatorId();
-        try {
-            log.info("Fetching images for creatorId: {}", creatorId);
+        log.info("Fetching images for creatorId: {}", creatorId);
 
-            //fetch all the image related details for the creator
-            List<Image> entities = GCPStorageImageRepository.findByCreatorId(creatorId);
+        List<Image> entities = findByCreatorId(creatorId);
 
-            List<com.greengrub.proto.image.Image> protoImages = entities.stream()
-                    .map(ImageHelper::getProtoImageFromServiceImage)
-                    .toList();
+        List<com.greengrub.proto.image.Image> protoImages = entities.stream()
+                .map(ImageMapper::getProtoImageFromServiceImage)
+                .toList();
 
-            GetImagesByCreatorResponse response = GetImagesByCreatorResponse.newBuilder()
-                    .addAllImages(protoImages)
-                    .build();
+        GetImagesByCreatorResponse response = GetImagesByCreatorResponse.newBuilder()
+                .addAllImages(protoImages)
+                .build();
 
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            log.error("Error while fetching images for creatorId: {}", creatorId, e);
-            responseObserver.onError(io.grpc.Status.INTERNAL
-                    .withDescription("Failed to fetch images: " + e.getMessage())
-                    .asRuntimeException());
-        }
-        //    List<ImageDocument> imageDocuments = imageService.getImagesByCreator(
-//            request.getCreatorId(),
-//            request.getLimit() > 0 ? request.getLimit() : 50); // fetch data in chunks
-//            // Option 1: Send ALL images in ONE response (Simple)
-//            if (true) {   // Change condition as needed
-//                GetImagesByCreatorResponse response = GetImagesByCreatorResponse.newBuilder()
-//                        .addAllImages(mapToProtoList(imageDocuments))   // Important
-//                        .build();
-//
-//                responseObserver.onNext(response);
-//                responseObserver.onCompleted();
-//                return;
-//            }
-//
-//            // Option 2: Send images in batches / one by one (Better for large data)
-//            for (ImageDocument doc : imageDocuments) {
-//
-//                Image protoImage = mapToProtoImage(doc);   // Convert entity to proto
-//
-//                GetImagesByCreatorResponse response = GetImagesByCreatorResponse.newBuilder()
-//                        .addImages(protoImage)                    // Add one image at a time
-//                        .build();
-//
-//                responseObserver.onNext(response);            // Send one response per image
-//            }
-//
-//            responseObserver.onCompleted();
-//        }
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
     public void deleteImagesByImageId(ImageByImageIdRequest request, StreamObserver<DeleteImageByImageIdResponse> responseObserver) {
-        try {
-            if (request.getImageId().trim().isEmpty()) {
-                throw new IllegalArgumentException("Image ID cannot be empty");
-            }
-            Image image = GCPStorageImageRepository.findById(request.getImageId()).orElse(null);
-            boolean deleted = GCPStorageImageRepository.deleteByImageId(request.getImageId());
-
-            String responseMessage = (image != null) ?
-                    "Successfully deleted image in Local: " + image.getFileName():
-                    "Image deleted successfully";
-
-            DeleteImageByImageIdResponse response = DeleteImageByImageIdResponse.newBuilder()
-                    .setMessage(deleted ? responseMessage : "Image not found")
-                    .build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-
-        } catch (IllegalArgumentException e) {
-            responseObserver.onError(Status.INVALID_ARGUMENT
-                    .withDescription(e.getMessage())
-                    .asRuntimeException());
-        } catch (Exception e) {
-            responseObserver.onError(Status.INTERNAL
-                    .withDescription("Failed to delete image: " + e.getMessage())
-                    .asRuntimeException());
+        if (request.getImageId().trim().isEmpty()) {
+            throw new InvalidImageRequestException("Image ID cannot be empty");
         }
+
+        Image image = findByIdOrNull(request.getImageId());
+        boolean deleted = false;
+        if (image != null) {
+            deleteFromFirestore(image);
+            deleted = true;
+        }
+
+        String responseMessage = (image != null)
+                ? "Successfully deleted image: " + image.getFileName()
+                : "Image not found";
+
+        DeleteImageByImageIdResponse response = DeleteImageByImageIdResponse.newBuilder()
+                .setMessage(deleted ? responseMessage : "Image not found")
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
     @Override
-    public void getImageByImageId(ImageByImageIdRequest request,
-                                  StreamObserver<GetImagesByCreatorResponse> responseObserver) {
+    public void getImageByImageId(ImageByImageIdRequest request, StreamObserver<GetImagesByCreatorResponse> responseObserver) {
         String imageId = request.getImageId();
-        try {
-            if (request.getImageId().trim().isEmpty()) {
-                throw new IllegalArgumentException("Image ID cannot be empty");
+        if (imageId.trim().isEmpty()) {
+            throw new InvalidImageRequestException("Image ID cannot be empty");
+        }
+
+        Image image = findById(imageId);
+
+        com.greengrub.proto.image.Image protoImage = ImageMapper.getProtoImageFromServiceImage(image);
+
+        GetImagesByCreatorResponse response = GetImagesByCreatorResponse.newBuilder()
+                .addImages(protoImage)
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    // --- Resilience-wrapped GCP Cloud Storage call ---
+
+    @TimeLimiter(name = "gcpUploadLimiter")
+    @Retry(name = "gcpRetry")
+    @CircuitBreaker(name = "gcpBreaker")
+    private CompletableFuture<String> uploadToGcp(byte[] imageBytes, String imageId, String creatorId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // Uncomment once GcpStorageService.uploadImage is implemented:
+                // return gcpStorageService.uploadImage(imageBytes, imageId, creatorId);
+                return "This is test URL";
+            } catch (Exception e) {
+                log.warn("GCP upload failed for imageId: {} - will retry", imageId);
+                throw new GcpUploadException(imageId, e);
             }
+        });
+    }
 
-            // Fetch single image
-            Image image = GCPStorageImageRepository.findById(imageId)
-                    .orElseThrow(() -> new RuntimeException("Image not found with id: " + imageId));
+    // --- Resilience-wrapped Firestore calls ---
 
-            // Convert to Proto
-            com.greengrub.proto.image.Image protoImage = ImageHelper.getProtoImageFromServiceImage(image);
-
-            // Build response (even for single image)
-            GetImagesByCreatorResponse response = GetImagesByCreatorResponse.newBuilder()
-                    .addImages(protoImage)
-                    .build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-
-        } catch (RuntimeException e) {   // Image not found
-            responseObserver.onError(Status.NOT_FOUND
-                    .withDescription("Image not found with id: " + request.getImageId())
-                    .asRuntimeException());
+    @Retry(name = "firestoreRetry")
+    @CircuitBreaker(name = "firestoreBreaker")
+    private void saveToFirestore(Image entity) {
+        try {
+            firestoreTemplate.save(entity).block();
         } catch (Exception e) {
-            responseObserver.onError(Status.INTERNAL
-                    .withDescription("Failed to fetch image: " + e.getMessage())
-                    .asRuntimeException());
+            log.warn("Firestore save failed for imageId: {} - will retry", entity.getImageId());
+            throw new ImageStorageException("Firestore save failed for imageId: " + entity.getImageId(), e, true);
         }
     }
 
+    @Retry(name = "firestoreRetry")
+    @CircuitBreaker(name = "firestoreBreaker")
+    private List<Image> findByCreatorId(String creatorId) {
+        try {
+            return firestoreTemplate.findAll(Image.class)
+                    .filter(image -> creatorId.equals(image.getCreatorId()))
+                    .collectList()
+                    .block();
+        } catch (Exception e) {
+            log.warn("Firestore findByCreatorId failed for creatorId: {} - will retry", creatorId);
+            throw new ImageStorageException("Firestore query failed for creatorId: " + creatorId, e, true);
+        }
+    }
+
+    @Retry(name = "firestoreRetry")
+    @CircuitBreaker(name = "firestoreBreaker")
+    private Image findById(String imageId) {
+        try {
+            Image image = firestoreTemplate.findById(Mono.just(imageId), Image.class).block();
+            if (image == null) {
+                throw new ImageNotFoundException(imageId);
+            }
+            return image;
+        } catch (ImageNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Firestore findById failed for imageId: {} - will retry", imageId);
+            throw new ImageStorageException("Firestore query failed for imageId: " + imageId, e, true);
+        }
+    }
+
+    @Retry(name = "firestoreRetry")
+    @CircuitBreaker(name = "firestoreBreaker")
+    private Image findByIdOrNull(String imageId) {
+        try {
+            return firestoreTemplate.findById(Mono.just(imageId), Image.class).block();
+        } catch (Exception e) {
+            log.warn("Firestore findById failed for imageId: {} - will retry", imageId);
+            throw new ImageStorageException("Firestore query failed for imageId: " + imageId, e, true);
+        }
+    }
+
+    private void deleteFromFirestore(Image image) {
+        try {
+            firestoreTemplate.delete(Mono.just(image)).block();
+        } catch (Exception e) {
+            log.error("Firestore delete failed for imageId: {}", image.getImageId(), e);
+            throw new ImageStorageException("Firestore delete failed for imageId: " + image.getImageId(), e, false);
+        }
+    }
 }
