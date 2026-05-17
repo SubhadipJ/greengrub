@@ -1,12 +1,11 @@
 package com.greengrub.image_service.repository;
 
-
+import com.google.cloud.spring.data.firestore.FirestoreReactiveRepository;
 import com.greengrub.image_service.entity.Image;
-import org.springframework.data.jpa.repository.JpaRepository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-
-public interface GCPStorageImageRepository extends JpaRepository<Image, String> {
-    List<Image> findByCreatorId(String creatorId);
-    boolean deleteByImageId(String imageId);
+public interface GCPStorageImageRepository extends FirestoreReactiveRepository<Image> {
+    Flux<Image> findByCreatorId(String creatorId);
+    Mono<Long> deleteByImageId(String imageId);
 }
