@@ -1,4 +1,4 @@
-package com.greengrub.notification.email;
+package com.greengrub.notification.enums;
 
 import lombok.Getter;
 
