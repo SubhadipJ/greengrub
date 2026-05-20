@@ -1,10 +1,9 @@
-package com.greengrub.notification.donation;
+package com.greengrub.notification.dto;
 
 public record Customer(
-        String Id,
+        String id,
         String firstname,
         String lastname,
         String email,
         String phone
-) {
-}
+) {}

@@ -6,7 +6,8 @@ spring:
       # project-id is auto-detected on GKE via metadata server
         # Uncomment below if running outside GKE:
         # project-id: your-gcp-project-id
-
+server:
+  port: 8085
 # --- Resilience4j ---
 resilience4j:
   retry:

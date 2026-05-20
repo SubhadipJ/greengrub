@@ -70,10 +70,10 @@
             </thead>
             <tbody>
             <tr th:each="item : ${items}" th:if="${items != null and !items.isEmpty()}">
-                <td th:text="${item.name}">Notebooks</td>
+                <td th:text="${item.foodName}">Notebooks</td>
                 <td th:text="${item.quantity}">120</td>
                 <td th:text="${item.unit ?: '-'}">pieces</td>
-                <td th:text="${item.category ?: '-'}">Stationery</td>
+                <td th:text="${item.category ?: '-'}">Food</td>
             </tr>
             <tr th:if="${items == null or items.isEmpty()}">
                 <td colspan="4" style="text-align:center; color:#888;">Monetary donation</td>
