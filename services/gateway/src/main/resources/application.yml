@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: gateway
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+server:
+  port: ${GATEWAY_PORT:8080}
+
+# Eureka client jar is on the classpath so we can flip it on later, but the
+# gateway does not register or fetch in any environment we ship today.
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    com.greengrub.gateway: INFO
+    org.springframework.cloud.gateway: INFO
