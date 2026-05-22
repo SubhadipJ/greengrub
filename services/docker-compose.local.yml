@@ -44,12 +44,15 @@ services:
     image: bitnami/kafka:3.6
     container_name: greengrub-kafka
     ports:
-      - "9092:9092"
+      - "9002:9002"
+      - "9003:9003"
     environment:
       KAFKA_CFG_NODE_ID: 0
       KAFKA_CFG_PROCESS_ROLES: broker,controller
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9002,CONTROLLER://:9003
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9002
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@localhost:9003
       ALLOW_PLAINTEXT_LISTENER: "yes"
     networks:
       - microservice-net
@@ -58,10 +61,11 @@ services:
     image: provectuslabs/kafka-ui
     container_name: greengrub-kafka-ui
     ports:
-      - "8090:8080"
+      - "8890:8880"
     environment:
+      SERVER_PORT: 8880
       KAFKA_CLUSTERS_0_NAME: greengrub
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9002
     networks:
       - microservice-net
 
