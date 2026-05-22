@@ -1,0 +1,70 @@
+# Server
+server:
+  port: 8084
+
+spring:
+  application:
+    name: notification-service
+
+  # Firestore
+  cloud:
+    gcp:
+      firestore:
+        enabled: true
+  # Kafka
+  kafka:
+    consumer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+      group-id: notificationGroup
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: '*'
+        spring.json.type.mapping: donationEvent:com.greengrub.notification.dto.Donation
+    listener:
+      missing-topics-fatal: false
+  # Mail
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  # Thymeleaf
+  thymeleaf:
+    cache: true
+  # Exclude MongoDB auto-config in k8s profile
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+
+# Resilience4j
+resilience4j:
+  retry:
+    instances:
+      notificationRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+  circuitbreaker:
+    instances:
+      notificationBreaker:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.greengrub.notification: INFO

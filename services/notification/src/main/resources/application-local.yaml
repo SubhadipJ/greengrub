@@ -1,0 +1,86 @@
+# Server
+server:
+  port: 8084
+
+spring:
+  application:
+    name: notification-service
+
+  # Disable Config Server
+  cloud:
+    config:
+      enabled: false
+    gcp:
+      firestore:
+        enabled: false
+
+  # MongoDB
+  mongodb:
+    username: admin
+    password: password
+    host: localhost
+    port: 27017
+    database: notification
+    authentication-database: admin
+  # Kafka
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9002
+      group-id: notificationGroup
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: '*'
+        spring.json.type.mapping: donationEvent:com.greengrub.notification.dto.Donation
+    listener:
+      missing-topics-fatal: false
+  # Mail
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: #will add once the org gmail is created
+    password: #will add once the org gmail is created
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  # Thymeleaf
+  thymeleaf:
+    cache: false
+  # Exclude Firestore auto-config in local profile
+  autoconfigure:
+    exclude:
+      - com.google.cloud.spring.autoconfigure.firestore.GcpFirestoreAutoConfiguration
+      - com.google.cloud.spring.autoconfigure.firestore.FirestoreRepositoriesAutoConfiguration
+      - com.google.cloud.spring.autoconfigure.firestore.FirestoreTransactionManagerAutoConfiguration
+
+# Resilience4j
+resilience4j:
+  retry:
+    instances:
+      notificationRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+  circuitbreaker:
+    instances:
+      notificationBreaker:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.greengrub.notification: DEBUG
+
+eureka:
+  client:
+    enabled: false

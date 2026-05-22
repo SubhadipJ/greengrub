@@ -7,6 +7,5 @@ import java.util.List;
 
 public interface LocalStorageImageRepository extends MongoRepository<LocalImage, String> {
     List<LocalImage> findByCreatorId(String creatorId);
-
     boolean deleteByImageId(String imageId);
 }

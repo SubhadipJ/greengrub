@@ -1,3 +1,54 @@
-firebase:
-  credentials:
-    path: /secrets/firebase/firebase-service-account.json
+spring:
+  cloud:
+    gcp:
+      firestore:
+        enabled: true
+      # project-id is auto-detected on GKE via metadata server
+        # Uncomment below if running outside GKE:
+        # project-id: your-gcp-project-id
+server:
+  port: 8085
+# --- Resilience4j ---
+resilience4j:
+  retry:
+    instances:
+      # Retry: Firestore transient failures (3 attempts, exponential backoff: 500ms -> 1s -> 2s)
+      firestoreRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - com.greengrub.image_service.exception.ImageStorageException
+      # Retry: GCP Cloud Storage upload failures (3 attempts, exponential backoff: 1s -> 2s -> 4s)
+      gcpRetry:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - com.greengrub.image_service.exception.GcpUploadException
+
+  circuitbreaker:
+    instances:
+      # Circuit Breaker: Firestore - opens after 50% failures in 10-call window
+      firestoreBreaker:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+      # Circuit Breaker: GCP Cloud Storage - longer recovery (60s) due to external API latency
+      gcpBreaker:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        wait-duration-in-open-state: 60s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+
+  timelimiter:
+    instances:
+      # TimeLimiter: GCP upload must complete within 10s or is cancelled
+      gcpUploadLimiter:
+        timeout-duration: 10s
+        cancel-running-future: true
