@@ -88,7 +88,7 @@ Once the containers start, the following tools are available:
 | Service               | URL                   | Purpose                           |
 | --------------------- | --------------------- | --------------------------------- |
 | MailDev               | http://localhost:1080 | View outgoing emails              |
-| Kafka UI              | http://localhost:8090 | Inspect Kafka topics and messages |
+| Kafka UI              | http://localhost:8890 | Inspect Kafka topics and messages |
 | Adminer (Postgres UI) | http://localhost:8088 | Inspect PostgreSQL tables         |
 | Mongo Express         | http://localhost:8089 | Inspect MongoDB collections       |
 
