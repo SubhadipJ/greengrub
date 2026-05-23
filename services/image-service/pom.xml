@@ -111,6 +111,12 @@
             <version>${swagger.version}</version>
         </dependency>
 
+        <!-- Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- gRPC Starter -->
         <dependency>
             <groupId>net.devh</groupId>

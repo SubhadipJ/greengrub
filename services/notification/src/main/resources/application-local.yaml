@@ -13,15 +13,14 @@ spring:
     gcp:
       firestore:
         enabled: false
-
   # MongoDB
-  mongodb:
-    username: admin
-    password: password
-    host: localhost
-    port: 27017
-    database: notification
-    authentication-database: admin
+  data:
+    mongodb:
+      username: admin
+      password: password
+      host: localhost
+      port: 27017
+      authentication-database: admin
   # Kafka
   kafka:
     consumer:

@@ -34,7 +34,6 @@ build/
 
 
 # Secrets - NEVER commit these
-settings.xml
 *.env
 
 # Local testing docs

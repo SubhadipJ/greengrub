@@ -61,9 +61,8 @@ services:
     image: provectuslabs/kafka-ui
     container_name: greengrub-kafka-ui
     ports:
-      - "8890:8880"
+      - "8890:8080"
     environment:
-      SERVER_PORT: 8880
       KAFKA_CLUSTERS_0_NAME: greengrub
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9002
     networks:
@@ -75,6 +74,16 @@ services:
     ports:
       - "1080:1080"
       - "1025:1025"
+    networks:
+      - microservice-net
+  
+  redis:
+    image: redis:7.2-alpine
+    container_name: greengrub-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    restart: unless-stopped
     networks:
       - microservice-net
 

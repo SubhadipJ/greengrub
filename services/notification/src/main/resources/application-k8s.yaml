@@ -11,6 +11,8 @@ spring:
     gcp:
       firestore:
         enabled: true
+        database-id: ${FIRESTORE_DATABASE:(default)}
+      project-id: ${GCP_FIRESTORE_PROJECT_ID}
   # Kafka
   kafka:
     consumer:

@@ -6,6 +6,11 @@ spring:
       # project-id is auto-detected on GKE via metadata server
         # Uncomment below if running outside GKE:
         # project-id: your-gcp-project-id
+  #grpc
+grpc:
+  server:
+    port: ${IMAGE_GRPC_SERVICE_PORT:9095}
+
 server:
   port: 8085
 # --- Resilience4j ---
@@ -52,3 +57,12 @@ resilience4j:
       gcpUploadLimiter:
         timeout-duration: 10s
         cancel-running-future: true
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        exclude: health,info,metrics,prometheus
