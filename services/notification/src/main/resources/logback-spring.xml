@@ -3,12 +3,17 @@
 
     <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="notification-service"/>
 
-    <!-- ── Console appender (human-readable for all profiles) ─────────────── -->
+    <!-- ── Console appender (always active — needed before profile resolves) ── -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
+
+    <!-- Default root — overridden per profile below -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
 
     <!-- ── Logstash TCP appender (local profile only) ─────────────────────── -->
     <springProfile name="local">

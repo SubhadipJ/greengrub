@@ -1,6 +1,7 @@
 package com.greengrub.image_service.mapper;
 
 import com.google.cloud.Timestamp;
+import com.google.protobuf.ByteString;
 import com.greengrub.image_service.entity.LocalImage;
 import com.greengrub.image_service.enumeration.CreatorType;
 import com.greengrub.image_service.entity.Image;
@@ -62,12 +63,15 @@ public class ImageMapper {
     }
 
     public static com.greengrub.proto.image.Image getProtoImageFromLocalImage(LocalImage image) {
-        return com.greengrub.proto.image.Image.newBuilder()
+        com.greengrub.proto.image.Image.Builder builder = com.greengrub.proto.image.Image.newBuilder()
                 .setImageId(image.getImageId())
                 .setImageUrl("")
                 .setCreatorId(image.getCreatorId())
                 .setCreatorType(com.greengrub.proto.image.CreatorType.valueOf(image.getCreatorType().name()))
-                .setCreatedDate(image.getCreatedDate().toString())
-                .build();
+                .setCreatedDate(image.getCreatedDate().toString());
+        if (image.getImageData() != null) {
+            builder.setImageData(ByteString.copyFrom(image.getImageData()));
+        }
+        return builder.build();
     }
 }

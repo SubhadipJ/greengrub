@@ -28,3 +28,4 @@ logging:
   level:
     com.greengrub.gateway: INFO
     org.springframework.cloud.gateway: DEBUG
+    net.logstash.logback.appender: ERROR

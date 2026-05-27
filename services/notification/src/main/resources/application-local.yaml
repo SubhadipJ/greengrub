@@ -11,16 +11,15 @@ spring:
     config:
       enabled: false
     gcp:
+      core:
+        enabled: false
       firestore:
         enabled: false
   # MongoDB
   data:
     mongodb:
-      username: admin
-      password: password
       host: localhost
       port: 27017
-      authentication-database: admin
   # Kafka
   kafka:
     consumer:
@@ -36,10 +35,10 @@ spring:
       missing-topics-fatal: false
   # Mail
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${EMAIL_USER_NAME}
-    password: ${EMAIL_PASSWORD}}
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:admin}
+    password: ${MAIL_PASSWORD:password}
     properties:
       mail:
         smtp:
@@ -80,6 +79,7 @@ logging:
     root: INFO
     com.greengrub: DEBUG          # or INFO in production
     org.springframework: INFO
+    net.logstash.logback.appender: ERROR
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 

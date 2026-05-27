@@ -23,10 +23,15 @@ services:
       - microservice-net
 
   mongodb:
-    image: mongo:7
+    image: mongo
     container_name: greengrub-mongo
     ports:
       - "27017:27017"
+    volumes:
+      - mongo:/data
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
     networks:
       - microservice-net
 
@@ -35,13 +40,15 @@ services:
     container_name: greengrub-mongo-ui
     environment:
       ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
     ports:
       - "8089:8081"
     networks:
       - microservice-net
 
   kafka:
-    image: bitnami/kafka:3.6
+    image: bitnamilegacy/kafka:3.6
     container_name: greengrub-kafka
     ports:
       - "9002:9002"
@@ -162,3 +169,4 @@ networks:
 volumes:
   elasticsearch-data:
   grafana-data:
+  mongo:
