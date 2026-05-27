@@ -6,6 +6,7 @@ import com.greengrub.image_service.enumeration.CreatorType;
 import com.greengrub.image_service.entity.Image;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class ImageMapper {
@@ -53,7 +54,7 @@ public class ImageMapper {
         return LocalImage.builder()
                 .imageId(UUID.randomUUID().toString())
                 .creatorId(image.getCreatorId())
-                .createdDate(LocalDateTime.parse(image.getCreatedDate().toString()))
+                .createdDate(OffsetDateTime.parse(image.getCreatedDate().toString()).toLocalDateTime())
                 .creatorType(CreatorType.valueOf(image.getCreatorType().toString()))
                 .fileName(image.getFileName())
                 .imageData(imageBytes)
