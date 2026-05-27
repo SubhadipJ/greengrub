@@ -64,7 +64,7 @@ public class ImageServiceImpl extends ImageServiceGrpc.ImageServiceImplBase {
                     .build();
 
             saveToFirestore(entity);
-            messages.add(request.getFileName() + " | got stored with id : " + imageId);
+            messages.add(imageId);
             log.info("Successfully uploaded image: {} | URL: {}", imageId, imageUrl);
         }
 

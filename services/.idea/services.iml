@@ -6,6 +6,17 @@
       <sourceFolder url="file://$MODULE_DIR$/notification/src/main" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/notification/src/main/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/notification/src/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/discovery/src/main" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/discovery/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/discovery/src/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/gateway/src/main" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/gateway/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/gateway/src/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/image-service/src/main" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/image-service/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/image-service/src/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/gateway/target" />
+      <excludeFolder url="file://$MODULE_DIR$/image-service/target" />
       <excludeFolder url="file://$MODULE_DIR$/notification/target" />
     </content>
     <orderEntry type="inheritedJdk" />

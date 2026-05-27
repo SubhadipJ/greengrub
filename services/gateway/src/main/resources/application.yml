@@ -1,6 +1,6 @@
 spring:
   application:
-    name: gateway
+    name: gateway-service
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
@@ -27,4 +27,5 @@ management:
 logging:
   level:
     com.greengrub.gateway: INFO
-    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud.gateway: DEBUG
+    net.logstash.logback.appender: ERROR

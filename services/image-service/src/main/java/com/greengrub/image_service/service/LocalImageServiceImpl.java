@@ -53,7 +53,7 @@ public class LocalImageServiceImpl extends ImageServiceGrpc.ImageServiceImplBase
                 .build();
 
             saveToMongo(entity);
-            messages.add(request.getFileName() + " | got stored with id : " + imageId);
+            messages.add(imageId);
             log.info("Successfully uploaded image in Local: {} | fileName: {}", imageId, entity.getFileName());
         }
 

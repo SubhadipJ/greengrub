@@ -3,6 +3,7 @@ package com.greengrub.notification.email;
 import com.greengrub.notification.dto.Customer;
 import com.greengrub.notification.dto.DonatedItem;
 import com.greengrub.notification.dto.Donation;
+import com.greengrub.notification.enums.DonationStatus;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +51,7 @@ class EmailServiceTest {
                 new BigDecimal("250.00"),
                 LocalDateTime.of(2024, 6, 1, 9, 30, 0),
                 customer, "GreenGrub Org",
+                DonationStatus.ACTIVE.name(),
                 List.of(item)
         );
 

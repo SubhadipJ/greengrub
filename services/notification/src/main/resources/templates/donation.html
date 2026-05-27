@@ -47,6 +47,10 @@
                 <th>Date</th>
                 <td th:text="${donationDate}">15 March 2025, 02:30 PM</td>
             </tr>
+            <tr th:if="${donationStatus}">
+                <th>Status</th>
+                <td th:text="${donationStatus}">PENDING</td>
+            </tr>
             <tr th:if="${campaignName}">
                 <th>Campaign</th>
                 <td th:text="${campaignName}">Summer School Program 2025</td>
