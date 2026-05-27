@@ -69,4 +69,21 @@ resilience4j:
 logging:
   level:
     root: INFO
-    com.greengrub.notification: INFO
+    com.greengrub: DEBUG          # or INFO in production
+    org.springframework: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+  endpoint:
+    prometheus:
+      enabled: true
+
+eureka:
+  client:
+    enabled: false

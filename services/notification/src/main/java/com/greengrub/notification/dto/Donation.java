@@ -12,5 +12,6 @@ public record Donation(
         LocalDateTime createdAt,
         Customer customer,
         String organizationName,
+        String status,
         List<DonatedItem> items
 ) {}
