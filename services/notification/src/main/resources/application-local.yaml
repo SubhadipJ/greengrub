@@ -38,8 +38,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: #will add once the org gmail is created
-    password: #will add once the org gmail is created
+    username: ${EMAIL_USER_NAME}
+    password: ${EMAIL_PASSWORD}}
     properties:
       mail:
         smtp:
@@ -78,8 +78,21 @@ resilience4j:
 logging:
   level:
     root: INFO
-    com.greengrub.notification: DEBUG
+    com.greengrub: DEBUG          # or INFO in production
+    org.springframework: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+  endpoint:
+    prometheus:
+      enabled: true
 
 eureka:
   client:
-    enabled: false
+    enabled: true

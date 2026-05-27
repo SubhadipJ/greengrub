@@ -17,10 +17,19 @@ public class NotificationConsumer {
 
     @KafkaListener(topics = "donation-topic", groupId = "notificationGroup")
     public void handleDonationEvent(Donation event) {
-        log.info("Received donation event -> ID: {}, Donor: {}, Items: {}",
-                event.donationId(), event.donorName(), event.items().size());
+        log.info("Received donation event -> ID: {}, Donor: {}, Status: {}, Items: {}",
+                event.donationId(), event.donorName(), event.status(), event.items().size());
 
-        DonationStatus eventType = DonationStatus.ACTIVE;
+        DonationStatus eventType;
+        try {
+            eventType = event.status() != null
+                    ? DonationStatus.valueOf(event.status())
+                    : DonationStatus.ACTIVE;
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown donation status '{}' for donationId: {} — defaulting to ACTIVE",
+                    event.status(), event.donationId());
+            eventType = DonationStatus.ACTIVE;
+        }
 
         notificationService.processNotification(event, eventType);
     }
