@@ -123,6 +123,13 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Logstash Logback Encoder — JSON logs to ELK (local) and stdout (k8s) -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.4</version>
+        </dependency>
+
         <!-- gRPC Starter -->
         <dependency>
             <groupId>net.devh</groupId>
