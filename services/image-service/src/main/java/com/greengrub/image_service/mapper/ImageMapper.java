@@ -1,11 +1,13 @@
 package com.greengrub.image_service.mapper;
 
 import com.google.cloud.Timestamp;
+import com.google.protobuf.ByteString;
 import com.greengrub.image_service.entity.LocalImage;
 import com.greengrub.image_service.enumeration.CreatorType;
 import com.greengrub.image_service.entity.Image;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class ImageMapper {
@@ -53,7 +55,7 @@ public class ImageMapper {
         return LocalImage.builder()
                 .imageId(UUID.randomUUID().toString())
                 .creatorId(image.getCreatorId())
-                .createdDate(LocalDateTime.parse(image.getCreatedDate().toString()))
+                .createdDate(OffsetDateTime.parse(image.getCreatedDate().toString()).toLocalDateTime())
                 .creatorType(CreatorType.valueOf(image.getCreatorType().toString()))
                 .fileName(image.getFileName())
                 .imageData(imageBytes)
@@ -61,12 +63,15 @@ public class ImageMapper {
     }
 
     public static com.greengrub.proto.image.Image getProtoImageFromLocalImage(LocalImage image) {
-        return com.greengrub.proto.image.Image.newBuilder()
+        com.greengrub.proto.image.Image.Builder builder = com.greengrub.proto.image.Image.newBuilder()
                 .setImageId(image.getImageId())
                 .setImageUrl("")
                 .setCreatorId(image.getCreatorId())
                 .setCreatorType(com.greengrub.proto.image.CreatorType.valueOf(image.getCreatorType().name()))
-                .setCreatedDate(image.getCreatedDate().toString())
-                .build();
+                .setCreatedDate(image.getCreatedDate().toString());
+        if (image.getImageData() != null) {
+            builder.setImageData(ByteString.copyFrom(image.getImageData()));
+        }
+        return builder.build();
     }
 }

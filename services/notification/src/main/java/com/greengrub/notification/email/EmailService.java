@@ -52,6 +52,7 @@ public class EmailService {
         context.setVariable("donationId", donation.donationId());
         context.setVariable("donationDate", donation.createdAt().format(DATE_FORMATTER));
         context.setVariable("totalAmount", donation.totalAmount());
+        context.setVariable("donationStatus", donation.status());
         context.setVariable("items", donation.items());
 
         return context;

@@ -6,6 +6,21 @@ spring:
       # project-id is auto-detected on GKE via metadata server
         # Uncomment below if running outside GKE:
         # project-id: your-gcp-project-id
+      storage:
+        enabled: true
+
+# GCP Cloud Storage
+gcp:
+  bucket:
+    name: ${GCP_BUCKET_NAME:greengrub}
+  storage:
+    base-url: ${GCP_STORAGE_BASE_URL:https://storage.googleapis.com}
+
+  #grpc
+grpc:
+  server:
+    port: ${IMAGE_GRPC_SERVICE_PORT:9095}
+
 server:
   port: 8085
 # --- Resilience4j ---
@@ -52,3 +67,24 @@ resilience4j:
       gcpUploadLimiter:
         timeout-duration: 10s
         cancel-running-future: true
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        exclude: health,info,prometheus,metrics
+
+logging:
+  level:
+    root: INFO
+    com.greengrub: DEBUG          # or INFO in production
+    org.springframework: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+eureka:
+  client:
+    enabled: false

@@ -64,7 +64,7 @@ public class ImageServiceImpl extends ImageServiceGrpc.ImageServiceImplBase {
                     .build();
 
             saveToFirestore(entity);
-            messages.add(request.getFileName() + " | got stored with id : " + imageId);
+            messages.add(imageId);
             log.info("Successfully uploaded image: {} | URL: {}", imageId, imageUrl);
         }
 
@@ -146,9 +146,10 @@ public class ImageServiceImpl extends ImageServiceGrpc.ImageServiceImplBase {
     private CompletableFuture<String> uploadToGcp(byte[] imageBytes, String imageId, String creatorId) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                // Uncomment once GcpStorageService.uploadImage is implemented:
-                // return gcpStorageService.uploadImage(imageBytes, imageId, creatorId);
-                return "This is test URL";
+                return gcpStorageService.uploadImage(imageBytes, imageId, creatorId, null);
+            } catch (GcpUploadException e) {
+                log.warn("GCP upload failed for imageId: {} - will retry", imageId);
+                throw e;
             } catch (Exception e) {
                 log.warn("GCP upload failed for imageId: {} - will retry", imageId);
                 throw new GcpUploadException(imageId, e);

@@ -1,0 +1,118 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Image Service  –  Deployment + HPA + Service
+# Namespace : services
+# Resource Plan : CPU req 200m / limit 450m | Mem req 350Mi / limit 650Mi
+# HPA : minReplicas 1, maxReplicas 5, CPU 65%, Memory 75%
+# ──────────────────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-service
+  namespace: services
+  labels:
+    app: image-service
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: image-service
+  template:
+    metadata:
+      labels:
+        app: image-service
+        component: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port:   "8085"
+        prometheus.io/path:   "/actuator/prometheus"
+    spec:
+      serviceAccountName: services-sa
+      containers:
+        - name: image-service
+          image: IMAGE_NAME
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8085
+              name: http
+            - containerPort: 9095
+              name: grpc
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            - name: GCP_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: image-service-secret
+                  key: GCS_BUCKET_NAME
+            - name: GCP_STORAGE_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: image-service-secret
+                  key: GCS_STORAGE_BASE_URL
+          resources:
+            requests:
+              cpu:    "200m"
+              memory: "350Mi"
+            limits:
+              cpu:    "450m"
+              memory: "650Mi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8085
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8085
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: image-service-hpa
+  namespace: services
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: image-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 65
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-service
+  namespace: services
+  labels:
+    app: image-service
+spec:
+  selector:
+    app: image-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8085
+    - name: grpc
+      port: 9095
+      targetPort: 9095
+  type: ClusterIP
