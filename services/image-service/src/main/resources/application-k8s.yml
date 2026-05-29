@@ -9,6 +9,9 @@ spring:
       storage:
         enabled: true
 
+  application:
+    name: image-service
+
 # GCP Cloud Storage
 gcp:
   bucket:
