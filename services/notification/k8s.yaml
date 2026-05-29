@@ -3,6 +3,11 @@
 # Namespace : services
 # Resource Plan : CPU req 120m / limit 250m | Mem req 160Mi / limit 400Mi
 # HPA : minReplicas 1, maxReplicas 4, CPU 65%, Memory 75%
+# NOTE: Running on self-managed kubeadm cluster (not GKE).
+#       GCP auth uses Application Default Credentials via the VM metadata server.
+#       The k8s node VM's service account must have Cloud Datastore User role
+#       assigned in GCP IAM.
+#       HPA requires metrics-server to be installed on the cluster.
 # ──────────────────────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
@@ -38,7 +43,6 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "k8s"
-            # Kafka — read from utility-config-mirror ConfigMap in services namespace
             - name: KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
