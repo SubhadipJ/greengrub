@@ -26,7 +26,12 @@ pipeline {
         }
 
         stage('Build') {
-            when { changeset "services/image-service/**" }
+            when {
+                anyOf {
+                    changeset "services/image-service/**"
+                    expression { currentBuild.previousBuild == null }
+                }
+            }
             steps {
                 dir('services/image-service') {
                     sh 'mvn clean compile -s settings.xml -DskipTests'
@@ -35,7 +40,12 @@ pipeline {
         }
 
         stage('Test') {
-            when { changeset "services/image-service/**" }
+            when {
+                anyOf {
+                    changeset "services/image-service/**"
+                    expression { currentBuild.previousBuild == null }
+                }
+            }
             steps {
                 dir('services/image-service') {
                     sh 'mvn test -s settings.xml'
@@ -44,7 +54,12 @@ pipeline {
         }
 
         stage('SonarQube Quality Scan') {
-            when { changeset "services/image-service/**" }
+            when {
+                anyOf {
+                    changeset "services/image-service/**"
+                    expression { currentBuild.previousBuild == null }
+                }
+            }
             steps {
                 dir('services/image-service') {
                     withSonarQubeEnv("${SONAR_SERVER_NAME}") {
@@ -61,7 +76,12 @@ pipeline {
         }
 
         stage('Quality Gate') {
-            when { changeset "services/image-service/**" }
+            when {
+                anyOf {
+                    changeset "services/image-service/**"
+                    expression { currentBuild.previousBuild == null }
+                }
+            }
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
@@ -70,7 +90,12 @@ pipeline {
         }
 
         stage('Check Test Coverage') {
-            when { changeset "services/image-service/**" }
+            when {
+                anyOf {
+                    changeset "services/image-service/**"
+                    expression { currentBuild.previousBuild == null }
+                }
+            }
             steps {
                 dir('services/image-service') {
                     script {
@@ -92,7 +117,12 @@ pipeline {
         }
 
         stage('Build & Tag Docker Image') {
-            when { changeset "services/image-service/**" }
+            when {
+                anyOf {
+                    changeset "services/image-service/**"
+                    expression { currentBuild.previousBuild == null }
+                }
+            }
             steps {
                 dir('services/image-service') {
                     sh "docker build -t ${DOCKER_HUB_USER}/${SERVICE_NAME}:${IMAGE_TAG} ."
@@ -101,7 +131,12 @@ pipeline {
         }
 
         stage('Push to Docker Hub') {
-            when { changeset "services/image-service/**" }
+            when {
+                anyOf {
+                    changeset "services/image-service/**"
+                    expression { currentBuild.previousBuild == null }
+                }
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
@@ -111,7 +146,12 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            when { changeset "services/image-service/**" }
+            when {
+                anyOf {
+                    changeset "services/image-service/**"
+                    expression { currentBuild.previousBuild == null }
+                }
+            }
             steps {
                 dir('services/image-service') {
                     withKubeConfig([credentialsId: "${K8S_CREDENTIALS_ID}", serverUrl: "${K8S_API_SERVER}"]) {
