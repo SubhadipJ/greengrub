@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local smoke tests ###
+src/test/java/com/greengrub/notification/email/EmailSmokeTest.java
