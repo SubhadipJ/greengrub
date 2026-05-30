@@ -4,9 +4,6 @@ pipeline {
     environment {
         SERVICE_NAME          = 'greengrub-notification-service'
         DOCKER_HUB_USER       = 'subhadipj'
-        IMAGE_TAG             = "${BUILD_NUMBER}-${GIT_COMMIT.take(7)}"
-        GITHUB_USERNAME       = 'SubhadipJ'
-        GITHUB_TOKEN          = credentials('SJ_Git_Cred')
         DOCKER_CREDENTIALS_ID = 'docker_cred'
         K8S_CREDENTIALS_ID    = 'k8s-cluster-config'
         K8S_API_SERVER        = 'https://10.160.0.3:6443'
@@ -30,11 +27,18 @@ pipeline {
                 anyOf {
                     changeset "services/notification/**"
                     expression { currentBuild.previousBuild == null }
+                    triggeredBy 'UserIdCause'
                 }
             }
             steps {
                 dir('services/notification') {
-                    sh 'mvn clean compile -s settings.xml -DskipTests'
+                    withCredentials([usernamePassword(credentialsId: 'SJ_Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+                        script {
+                            env.GITHUB_USERNAME = GH_USER
+                            env.GITHUB_TOKEN    = GH_TOKEN
+                        }
+                        sh 'mvn clean compile -s settings.xml -DskipTests'
+                    }
                 }
             }
         }
@@ -44,11 +48,18 @@ pipeline {
                 anyOf {
                     changeset "services/notification/**"
                     expression { currentBuild.previousBuild == null }
+                    triggeredBy 'UserIdCause'
                 }
             }
             steps {
                 dir('services/notification') {
-                    sh 'mvn test -s settings.xml'
+                    withCredentials([usernamePassword(credentialsId: 'SJ_Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+                                            script {
+                                                env.GITHUB_USERNAME = GH_USER
+                                                env.GITHUB_TOKEN    = GH_TOKEN
+                                            }
+                                            sh 'mvn test -s settings.xml -Dspring.profiles.active=local'
+                                        }
                 }
             }
         }
@@ -58,19 +69,27 @@ pipeline {
                 anyOf {
                     changeset "services/notification/**"
                     expression { currentBuild.previousBuild == null }
+                    triggeredBy 'UserIdCause'
                 }
             }
             steps {
                 dir('services/notification') {
-                    withSonarQubeEnv("${SONAR_SERVER_NAME}") {
-                        sh """
-                            mvn clean verify sonar:sonar -s settings.xml \
-                            -Dsonar.projectKey=greengrub-notification-service \
-                            -Dsonar.projectName="GreenGrub - Notification Service" \
-                            -Dsonar.host.url=http://172.17.0.1:9000 \
-                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-                        """
-                    }
+                    withCredentials([usernamePassword(credentialsId: 'SJ_Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+                                            script {
+                                                env.GITHUB_USERNAME = GH_USER
+                                                env.GITHUB_TOKEN    = GH_TOKEN
+                                            }
+                                            withSonarQubeEnv("${SONAR_SERVER_NAME}") {
+                                                sh """
+                                                    mvn clean verify sonar:sonar -s settings.xml \
+                                                    -Dspring.profiles.active=local \
+                                                    -Dsonar.projectKey=greengrub-image-service \
+                                                    -Dsonar.projectName="GreenGrub - Image Service" \
+                                                    -Dsonar.host.url=http://172.17.0.1:9000 \
+                                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                                                """
+                                            }
+                                        }
                 }
             }
         }
@@ -80,6 +99,7 @@ pipeline {
                 anyOf {
                     changeset "services/notification/**"
                     expression { currentBuild.previousBuild == null }
+                    triggeredBy 'UserIdCause'
                 }
             }
             steps {
@@ -94,6 +114,7 @@ pipeline {
                 anyOf {
                     changeset "services/notification/**"
                     expression { currentBuild.previousBuild == null }
+                    triggeredBy 'UserIdCause'
                 }
             }
             steps {
@@ -121,11 +142,12 @@ pipeline {
                 anyOf {
                     changeset "services/notification/**"
                     expression { currentBuild.previousBuild == null }
+                    triggeredBy 'UserIdCause'
                 }
             }
             steps {
                 dir('services/notification') {
-                    sh "docker build -t ${DOCKER_HUB_USER}/${SERVICE_NAME}:${IMAGE_TAG} ."
+                    sh "docker build -t ${DOCKER_HUB_USER}/${SERVICE_NAME}:${BUILD_NUMBER} ."
                 }
             }
         }
@@ -135,12 +157,13 @@ pipeline {
                 anyOf {
                     changeset "services/notification/**"
                     expression { currentBuild.previousBuild == null }
+                    triggeredBy 'UserIdCause'
                 }
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
-                    sh "docker push ${DOCKER_HUB_USER}/${SERVICE_NAME}:${IMAGE_TAG}"
+                    sh "docker push ${DOCKER_HUB_USER}/${SERVICE_NAME}:${BUILD_NUMBER}"
                 }
             }
         }
@@ -150,12 +173,13 @@ pipeline {
                 anyOf {
                     changeset "services/notification/**"
                     expression { currentBuild.previousBuild == null }
+                    triggeredBy 'UserIdCause'
                 }
             }
             steps {
                 dir('services/notification') {
                     withKubeConfig([credentialsId: "${K8S_CREDENTIALS_ID}", serverUrl: "${K8S_API_SERVER}"]) {
-                        sh "sed -i 's|IMAGE_NAME|${DOCKER_HUB_USER}/${SERVICE_NAME}:${IMAGE_TAG}|g' k8s.yaml"
+                        sh "sed -i 's|IMAGE_NAME|${DOCKER_HUB_USER}/${SERVICE_NAME}:${BUILD_NUMBER}|g' k8s.yaml"
                         sh "kubectl apply -f k8s.yaml -n services"
                         sh "kubectl rollout status deployment/notification-service -n services --timeout=90s"
                     }
@@ -166,7 +190,7 @@ pipeline {
 
     post {
         always {
-            sh "docker rmi ${DOCKER_HUB_USER}/${SERVICE_NAME}:${IMAGE_TAG} || true"
+            sh "docker rmi ${DOCKER_HUB_USER}/${SERVICE_NAME}:${BUILD_NUMBER} || true"
             cleanWs()
         }
         success {

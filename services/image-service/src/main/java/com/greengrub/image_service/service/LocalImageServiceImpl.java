@@ -73,8 +73,7 @@ public class LocalImageServiceImpl extends ImageServiceGrpc.ImageServiceImplBase
         List<LocalImage> entities = findByCreatorId(creatorId);
 
         List<com.greengrub.proto.image.Image> protoImages = entities.stream()
-                .map(ImageMapper::getImageFromLocalImage)
-                .map(ImageMapper::getProtoImageFromServiceImage)
+                .map(ImageMapper::getProtoImageFromLocalImage)
                 .toList();
 
         GetImagesByCreatorResponse response = GetImagesByCreatorResponse.newBuilder()
