@@ -124,9 +124,7 @@ pipeline {
                             script: "grep -oP 'Total.*?\\K\\d+(?=%)' target/site/jacoco/index.html | tail -1 || echo '0'",
                             returnStdout: true
                         ).trim()
-
                         echo "Test Coverage: ${coverage}%"
-
                         if (coverage.toInteger() < 80) {
                             error("Test coverage is ${coverage}%. Minimum required is 80%. Pipeline terminated.")
                         } else {

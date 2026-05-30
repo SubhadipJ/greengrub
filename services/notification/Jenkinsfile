@@ -32,13 +32,7 @@ pipeline {
             }
             steps {
                 dir('services/notification') {
-                    withCredentials([usernamePassword(credentialsId: 'SJ_Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
-                        script {
-                            env.GITHUB_USERNAME = GH_USER
-                            env.GITHUB_TOKEN    = GH_TOKEN
-                        }
-                        sh 'mvn clean compile -s settings.xml -DskipTests'
-                    }
+                    sh 'mvn clean compile -DskipTests'
                 }
             }
         }
@@ -53,13 +47,7 @@ pipeline {
             }
             steps {
                 dir('services/notification') {
-                    withCredentials([usernamePassword(credentialsId: 'SJ_Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
-                                            script {
-                                                env.GITHUB_USERNAME = GH_USER
-                                                env.GITHUB_TOKEN    = GH_TOKEN
-                                            }
-                                            sh 'mvn test -s settings.xml -Dspring.profiles.active=local'
-                                        }
+                    sh 'mvn test -Dspring.profiles.active=local'
                 }
             }
         }
@@ -74,22 +62,16 @@ pipeline {
             }
             steps {
                 dir('services/notification') {
-                    withCredentials([usernamePassword(credentialsId: 'SJ_Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
-                                            script {
-                                                env.GITHUB_USERNAME = GH_USER
-                                                env.GITHUB_TOKEN    = GH_TOKEN
-                                            }
-                                            withSonarQubeEnv("${SONAR_SERVER_NAME}") {
-                                                sh """
-                                                    mvn clean verify sonar:sonar -s settings.xml \
-                                                    -Dspring.profiles.active=local \
-                                                    -Dsonar.projectKey=greengrub-image-service \
-                                                    -Dsonar.projectName="GreenGrub - Image Service" \
-                                                    -Dsonar.host.url=http://172.17.0.1:9000 \
-                                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-                                                """
-                                            }
-                                        }
+                    withSonarQubeEnv("${SONAR_SERVER_NAME}") {
+                        sh """
+                            mvn clean verify sonar:sonar \
+                            -Dspring.profiles.active=local \
+                            -Dsonar.projectKey=greengrub-notification-service \
+                            -Dsonar.projectName="GreenGrub - Notification Service" \
+                            -Dsonar.host.url=http://172.17.0.1:9000 \
+                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                        """
+                    }
                 }
             }
         }
@@ -124,9 +106,7 @@ pipeline {
                             script: "grep -oP 'Total.*?\\K\\d+(?=%)' target/site/jacoco/index.html | tail -1 || echo '0'",
                             returnStdout: true
                         ).trim()
-
                         echo "Test Coverage: ${coverage}%"
-
                         if (coverage.toInteger() < 80) {
                             error("Test coverage is ${coverage}%. Minimum required is 80%. Pipeline terminated.")
                         } else {
