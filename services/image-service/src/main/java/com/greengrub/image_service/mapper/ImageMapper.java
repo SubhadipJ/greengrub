@@ -68,7 +68,9 @@ public class ImageMapper {
                 .setImageUrl("")
                 .setCreatorId(image.getCreatorId())
                 .setCreatorType(com.greengrub.proto.image.CreatorType.valueOf(image.getCreatorType().name()))
-                .setCreatedDate(image.getCreatedDate().toString());
+                .setCreatedDate(image.getCreatedDate().toString())
+                .setFileName(image.getFileName() != null ? image.getFileName() : "")
+                .setContentType(image.getContentType() != null ? image.getContentType() : "");
         if (image.getImageData() != null) {
             builder.setImageData(ByteString.copyFrom(image.getImageData()));
         }
