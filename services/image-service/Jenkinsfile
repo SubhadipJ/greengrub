@@ -32,7 +32,7 @@ pipeline {
             }
             steps {
                 dir('services/image-service') {
-                    withCredentials([usernamePassword(credentialsId: 'SJ_Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+                    withCredentials([usernamePassword(credentialsId: 'Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
                         script {
                             env.GITHUB_USERNAME = GH_USER
                             env.GITHUB_TOKEN    = GH_TOKEN
@@ -53,7 +53,7 @@ pipeline {
             }
             steps {
                 dir('services/image-service') {
-                    withCredentials([usernamePassword(credentialsId: 'SJ_Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+                    withCredentials([usernamePassword(credentialsId: 'Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
                         script {
                             env.GITHUB_USERNAME = GH_USER
                             env.GITHUB_TOKEN    = GH_TOKEN
@@ -74,7 +74,7 @@ pipeline {
             }
             steps {
                 dir('services/image-service') {
-                    withCredentials([usernamePassword(credentialsId: 'SJ_Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+                    withCredentials([usernamePassword(credentialsId: 'Git_Cred', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
                         script {
                             env.GITHUB_USERNAME = GH_USER
                             env.GITHUB_TOKEN    = GH_TOKEN
