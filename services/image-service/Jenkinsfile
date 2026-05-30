@@ -18,7 +18,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'dev', credentialsId: 'SJ_Git_Cred', url: 'https://github.com/SubhadipJ/greengrub.git'
+                checkout scm
             }
         }
 
@@ -85,7 +85,7 @@ pipeline {
                                 -Dspring.profiles.active=local \
                                 -Dsonar.projectKey=greengrub-image-service \
                                 -Dsonar.projectName="GreenGrub - Image Service" \
-                                -Dsonar.host.url=http://172.17.0.1:9000 \
+                                -Dsonar.host.url=http://sonar:9000 \
                                 -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
                             """
                         }

@@ -68,7 +68,7 @@ pipeline {
                             -Dspring.profiles.active=local \
                             -Dsonar.projectKey=greengrub-notification-service \
                             -Dsonar.projectName="GreenGrub - Notification Service" \
-                            -Dsonar.host.url=http://172.17.0.1:9000 \
+                            -Dsonar.host.url=http://sonar:9000 \
                             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
                         """
                     }
