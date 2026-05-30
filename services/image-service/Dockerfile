@@ -1,8 +1,24 @@
 FROM maven:3.9-eclipse-temurin-21-alpine AS build
 
+ARG GITHUB_USERNAME
+ARG GITHUB_TOKEN
+
 WORKDIR /app
 
-COPY settings.xml .
+RUN printf '<?xml version="1.0" encoding="UTF-8"?>\n\
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"\n\
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n\
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0\n\
+                              https://maven.apache.org/xsd/settings-1.2.0.xsd">\n\
+    <servers>\n\
+        <server>\n\
+            <id>github</id>\n\
+            <username>%s</username>\n\
+            <password>%s</password>\n\
+        </server>\n\
+    </servers>\n\
+</settings>\n' "$GITHUB_USERNAME" "$GITHUB_TOKEN" > settings.xml && cat settings.xml
+
 COPY pom.xml .
 RUN mvn dependency:go-offline -B -s settings.xml
 
