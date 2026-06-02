@@ -25,12 +25,12 @@ RUN mvn dependency:go-offline -B -s settings.xml
 COPY src ./src
 RUN mvn clean package -DskipTests -s settings.xml
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-RUN addgroup -g 1001 appuser && \
-    adduser -D -u 1001 -G appuser appuser
+RUN groupadd -g 1001 appuser && \
+    useradd -u 1001 -g appuser -m appuser
 
 COPY --from=build /app/target/image-service.jar app.jar
 
@@ -41,7 +41,7 @@ USER appuser
 EXPOSE 8085 9095
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8085/actuator/health || exit 1
+  CMD curl -f http://localhost:8085/actuator/health || exit 1
 
 ENTRYPOINT ["java", \
     "-XX:+UseContainerSupport", \
