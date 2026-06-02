@@ -17,7 +17,7 @@ RUN printf '<?xml version="1.0" encoding="UTF-8"?>\n\
             <password>%s</password>\n\
         </server>\n\
     </servers>\n\
-</settings>\n' "$GITHUB_USERNAME" "$GITHUB_TOKEN" > settings.xml && cat settings.xml
+</settings>\n' "$GITHUB_USERNAME" "$GITHUB_TOKEN" > settings.xml
 
 COPY pom.xml .
 RUN mvn dependency:go-offline -B -s settings.xml
@@ -47,5 +47,7 @@ ENTRYPOINT ["java", \
     "-XX:+UseContainerSupport", \
     "-XX:MaxRAMPercentage=75.0", \
     "-Djava.security.egd=file:/dev/./urandom", \
+    "-Dio.netty.transport.noNative=true", \
+    "-Dio.grpc.netty.shaded.io.netty.transport.noNative=true", \
     "-jar", \
     "app.jar"]
