@@ -59,7 +59,7 @@ spec:
                   key: GCS_STORAGE_BASE_URL
           resources:
             requests:
-              cpu:    "200m"
+              cpu:    "80m"
               memory: "350Mi"
             limits:
               cpu:    "450m"
