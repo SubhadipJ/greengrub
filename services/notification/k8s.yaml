@@ -77,7 +77,7 @@ spec:
                   key: MAIL_PASSWORD
           resources:
             requests:
-              cpu:    "120m"
+              cpu:    "80m"
               memory: "160Mi"
             limits:
               cpu:    "250m"
