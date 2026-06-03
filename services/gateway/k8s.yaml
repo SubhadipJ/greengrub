@@ -51,10 +51,10 @@ spec:
           resources:
             requests:
               cpu:    "50m"
-              memory: "160Mi"
+              memory: "130Mi"
             limits:
               cpu:    "250m"
-              memory: "400Mi"
+              memory: "250Mi"
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
