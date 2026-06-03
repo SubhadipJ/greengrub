@@ -191,10 +191,6 @@
 								<exclude>com/greengrub/gateway/GatewayApplication.class</exclude>
 								<exclude>com/greengrub/gateway/config/SecurityConfig.class</exclude>
 								<exclude>com/greengrub/gateway/config/CorsConfig.class</exclude>
-								<exclude>com/greengrub/gateway/config/RateLimitConfig.class</exclude>
-								<exclude>com/greengrub/gateway/filter/JwtAuthenticationFilter$1.class</exclude>
-								<exclude>com/greengrub/gateway/filter/JwtAuthenticationFilter$2.class</exclude>
-								<exclude>com/greengrub/gateway/filter/RequestLoggingFilter$1.class</exclude>
 							</excludes>
 						</configuration>
 					</execution>
