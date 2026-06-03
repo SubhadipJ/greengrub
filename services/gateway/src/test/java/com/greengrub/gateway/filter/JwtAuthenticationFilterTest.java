@@ -223,4 +223,85 @@ class JwtAuthenticationFilterTest {
         assertThat(chain.getRequest()).isNotNull();
         verify(jwtUtils, never()).parse(anyString());
     }
+
+    // --- Wrapper getHeaders / getHeaderNames coverage ---
+
+    @Test
+    void publicPath_getHeaders_returnEmptyForSpoofedHeader() throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/auth/signup");
+        req.addHeader("X-User-Id", "evil");
+        req.addHeader("Accept", "application/json");
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(req, new MockHttpServletResponse(), chain);
+
+        jakarta.servlet.http.HttpServletRequest forwarded = (jakarta.servlet.http.HttpServletRequest) chain.getRequest();
+        assertThat(forwarded.getHeaders("X-User-Id").hasMoreElements()).isFalse();
+        assertThat(forwarded.getHeaders("Accept").hasMoreElements()).isTrue();
+    }
+
+    @Test
+    void publicPath_getHeaderNames_excludesSpoofedHeaders() throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/auth/signup");
+        req.addHeader("X-User-Role", "ADMIN");
+        req.addHeader("Accept", "application/json");
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(req, new MockHttpServletResponse(), chain);
+
+        jakarta.servlet.http.HttpServletRequest forwarded = (jakarta.servlet.http.HttpServletRequest) chain.getRequest();
+        java.util.List<String> names = java.util.Collections.list(forwarded.getHeaderNames());
+        assertThat(names).doesNotContain("X-User-Role");
+        assertThat(names).contains("Accept");
+    }
+
+    @Test
+    void authenticatedPath_getHeaders_returnsJwtValues() throws Exception {
+        Claims claims = buildClaims("user@example.com", "user-123", "USER");
+        when(jwtUtils.parse("valid.token")).thenReturn(claims);
+
+        MockHttpServletRequest req = new MockHttpServletRequest("GET", "/api/v1/donations");
+        req.addHeader("Authorization", "Bearer valid.token");
+        req.addHeader("X-User-Id", "spoofed");
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(req, new MockHttpServletResponse(), chain);
+
+        jakarta.servlet.http.HttpServletRequest forwarded = (jakarta.servlet.http.HttpServletRequest) chain.getRequest();
+        java.util.List<String> userIdValues = java.util.Collections.list(forwarded.getHeaders("X-User-Id"));
+        assertThat(userIdValues).containsExactly("user-123");
+    }
+
+    @Test
+    void authenticatedPath_getHeaderNames_includesInjectedHeaders() throws Exception {
+        Claims claims = buildClaims("user@example.com", "user-123", "USER");
+        when(jwtUtils.parse("valid.token")).thenReturn(claims);
+
+        MockHttpServletRequest req = new MockHttpServletRequest("GET", "/api/v1/donations");
+        req.addHeader("Authorization", "Bearer valid.token");
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(req, new MockHttpServletResponse(), chain);
+
+        jakarta.servlet.http.HttpServletRequest forwarded = (jakarta.servlet.http.HttpServletRequest) chain.getRequest();
+        java.util.List<String> names = java.util.Collections.list(forwarded.getHeaderNames());
+        assertThat(names).contains("X-User-Id", "X-User-Email", "X-User-Role");
+    }
+
+    @Test
+    void authenticatedPath_getHeaders_emptyForOtherSpoofedHeaders() throws Exception {
+        Claims claims = buildClaims("user@example.com", "user-123", "USER");
+        when(jwtUtils.parse("valid.token")).thenReturn(claims);
+
+        MockHttpServletRequest req = new MockHttpServletRequest("GET", "/api/v1/donations");
+        req.addHeader("Authorization", "Bearer valid.token");
+        req.addHeader("X-User-Email", "hacker@evil.com");
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(req, new MockHttpServletResponse(), chain);
+
+        jakarta.servlet.http.HttpServletRequest forwarded = (jakarta.servlet.http.HttpServletRequest) chain.getRequest();
+        java.util.List<String> emailValues = java.util.Collections.list(forwarded.getHeaders("X-User-Email"));
+        assertThat(emailValues).containsExactly("user@example.com");
+    }
 }
