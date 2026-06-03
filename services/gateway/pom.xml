@@ -156,7 +156,52 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.12</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals><goal>prepare-agent</goal></goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals><goal>report</goal></goals>
+					</execution>
+					<execution>
+						<id>check</id>
+						<phase>verify</phase>
+						<goals><goal>check</goal></goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>INSTRUCTION</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.92</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+							<excludes>
+								<exclude>com/greengrub/gateway/GatewayApplication.class</exclude>
+								<exclude>com/greengrub/gateway/config/SecurityConfig.class</exclude>
+								<exclude>com/greengrub/gateway/config/CorsConfig.class</exclude>
+								<exclude>com/greengrub/gateway/config/RateLimitConfig.class</exclude>
+								<exclude>com/greengrub/gateway/filter/JwtAuthenticationFilter$1.class</exclude>
+								<exclude>com/greengrub/gateway/filter/JwtAuthenticationFilter$2.class</exclude>
+								<exclude>com/greengrub/gateway/filter/RequestLoggingFilter$1.class</exclude>
+							</excludes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
+        <finalName>gateway-service</finalName>
 	</build>
 
 </project>
