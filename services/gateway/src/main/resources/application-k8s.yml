@@ -5,7 +5,7 @@ spring:
         webmvc:
           http-client:
             connect-timeout: 2s
-            read-timeout: 5s
+            read-timeout: 15s
           routes:
             - id: user-service
               uri: http://customer-service
@@ -71,13 +71,13 @@ resilience4j:
   timelimiter:
     instances:
       userServiceBreaker:
-        timeout-duration: 5s
+        timeout-duration: 15s
         cancel-running-future: true
       donationServiceBreaker:
-        timeout-duration: 5s
+        timeout-duration: 15s
         cancel-running-future: true
       foodServiceBreaker:
-        timeout-duration: 5s
+        timeout-duration: 15s
         cancel-running-future: true
 
 jwt:
