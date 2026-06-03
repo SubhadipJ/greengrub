@@ -110,7 +110,7 @@ pipeline {
                         if (coverage.toInteger() < 80) {
                             error("Test coverage is ${coverage}%. Minimum required is 80%. Pipeline terminated.")
                         } else {
-                            echo "Test coverage (${coverage}%) is above 80%. Proceeding...")
+                            echo "Test coverage (${coverage}%) is above 80%. Proceeding..."
                         }
                     }
                 }
