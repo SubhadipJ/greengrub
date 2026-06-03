@@ -1,8 +1,8 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # Image Service  –  Deployment + HPA + Service
 # Namespace : services
-# Resource Plan : CPU req 200m / limit 450m | Mem req 350Mi / limit 650Mi
-# HPA : minReplicas 1, maxReplicas 2, CPU 65%, Memory 75%
+# Resource Plan : CPU req 50m / limit 450m | Mem req 180Mi / limit 300Mi
+# HPA : minReplicas 1, maxReplicas 1, CPU 65%, Memory 75%
 # NOTE: Running on self-managed kubeadm cluster (not GKE).
 #       GCP auth uses Application Default Credentials via the VM metadata server.
 #       The k8s node VM's service account must have Storage Object Admin +
@@ -60,10 +60,10 @@ spec:
           resources:
             requests:
               cpu:    "50m"
-              memory: "350Mi"
+              memory: "180Mi"
             limits:
               cpu:    "450m"
-              memory: "650Mi"
+              memory: "300Mi"
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
@@ -99,7 +99,7 @@ spec:
     kind: Deployment
     name: image-service
   minReplicas: 1
-  maxReplicas: 2
+  maxReplicas: 1
   metrics:
     - type: Resource
       resource:
