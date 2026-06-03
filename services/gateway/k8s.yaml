@@ -50,7 +50,7 @@ spec:
                   key: CORS_ALLOWED_ORIGINS
           resources:
             requests:
-              cpu:    "80m"
+              cpu:    "50m"
               memory: "160Mi"
             limits:
               cpu:    "250m"
@@ -59,9 +59,11 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 18
+            failureThreshold: 60
+            successThreshold: 1
+            timeoutSeconds: 1
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
