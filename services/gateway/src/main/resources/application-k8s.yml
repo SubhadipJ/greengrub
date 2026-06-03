@@ -17,7 +17,7 @@ spring:
                 - RemoveRequestHeader=X-User-Role
                 - name: CircuitBreaker
                   args:
-                    name: userServiceBreaker
+                    id: userServiceBreaker
                     fallbackUri: forward:/fallback/user-service
             - id: donation-service
               uri: http://donation-service
@@ -29,7 +29,7 @@ spring:
                 - RemoveRequestHeader=X-User-Role
                 - name: CircuitBreaker
                   args:
-                    name: donationServiceBreaker
+                    id: donationServiceBreaker
                     fallbackUri: forward:/fallback/donation-service
             - id: food-service
               uri: http://food-service
@@ -41,7 +41,7 @@ spring:
                 - RemoveRequestHeader=X-User-Role
                 - name: CircuitBreaker
                   args:
-                    name: foodServiceBreaker
+                    id: foodServiceBreaker
                     fallbackUri: forward:/fallback/food-service
 
 resilience4j:
