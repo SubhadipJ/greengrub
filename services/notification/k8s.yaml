@@ -1,7 +1,7 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # Notification Service  –  Deployment + HPA + Service
 # Namespace : services
-# Resource Plan : CPU req 50m / limit 250m | Mem req 130Mi / limit 2500Mi
+# Resource Plan : CPU req 50m / limit 250m | Mem req 180Mi / limit 400Mi
 # HPA : minReplicas 1, maxReplicas 1, CPU 65%, Memory 75%
 # NOTE: Running on self-managed kubeadm cluster (not GKE).
 #       GCP auth uses Application Default Credentials via the VM metadata server.
@@ -78,15 +78,15 @@ spec:
           resources:
             requests:
               cpu:    "50m"
-              memory: "130Mi"
+              memory: "180Mi"
             limits:
               cpu:    "250m"
-              memory: "250Mi"
+              memory: "400Mi"
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8084
-            initialDelaySeconds: 30
+            initialDelaySeconds: 90
             periodSeconds: 10
             failureThreshold: 60
             successThreshold: 1
