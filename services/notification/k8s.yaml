@@ -1,8 +1,8 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # Notification Service  –  Deployment + HPA + Service
 # Namespace : services
-# Resource Plan : CPU req 120m / limit 250m | Mem req 160Mi / limit 400Mi
-# HPA : minReplicas 1, maxReplicas 4, CPU 65%, Memory 75%
+# Resource Plan : CPU req 50m / limit 250m | Mem req 130Mi / limit 2500Mi
+# HPA : minReplicas 1, maxReplicas 1, CPU 65%, Memory 75%
 # NOTE: Running on self-managed kubeadm cluster (not GKE).
 #       GCP auth uses Application Default Credentials via the VM metadata server.
 #       The k8s node VM's service account must have Cloud Datastore User role
@@ -77,18 +77,20 @@ spec:
                   key: MAIL_PASSWORD
           resources:
             requests:
-              cpu:    "80m"
-              memory: "160Mi"
+              cpu:    "50m"
+              memory: "130Mi"
             limits:
               cpu:    "250m"
-              memory: "400Mi"
+              memory: "250Mi"
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8084
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 18
+            failureThreshold: 60
+            successThreshold: 1
+            timeoutSeconds: 1
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
