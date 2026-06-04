@@ -14,7 +14,6 @@ import java.util.List;
 @ConfigurationProperties(prefix = "app")
 public class GatewayProperties {
 
-    private final Cors cors = new Cors();
     private final RateLimit rateLimit = new RateLimit();
 
     /**
@@ -23,11 +22,6 @@ public class GatewayProperties {
      * method. Ant-style wildcards (*, **) are supported.
      */
     private List<String> publicPaths = new ArrayList<>();
-
-    @Data
-    public static class Cors {
-        private List<String> allowedOrigins = new ArrayList<>();
-    }
 
     @Data
     public static class RateLimit {

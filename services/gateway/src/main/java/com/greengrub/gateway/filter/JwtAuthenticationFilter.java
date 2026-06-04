@@ -58,6 +58,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
+        // CORS preflight must pass through before any auth check
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         if (isPublicPath(request)) {
             chain.doFilter(stripSpoofedIdentityHeaders(request), response);
             return;
