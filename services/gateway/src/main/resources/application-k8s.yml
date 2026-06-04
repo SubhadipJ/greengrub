@@ -3,6 +3,16 @@ spring:
     gateway:
       server:
         webmvc:
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns: "*"
+                allowedMethods: "*"
+                allowedHeaders: "*"
+                allowCredentials: true
+          default-filters:
+            - DedupeResponseHeader=Vary Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
           http-client:
             connect-timeout: 2s
             read-timeout: 15s
@@ -84,8 +94,6 @@ jwt:
   secret: ${JWT_SECRET}
 
 app:
-  cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   rate-limit:
     requests-per-minute: ${RATE_LIMIT_RPM:100}
     burst: ${RATE_LIMIT_BURST:20}
