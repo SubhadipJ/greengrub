@@ -1,0 +1,41 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Kibana Helm values
+# Chart : elastic/kibana  (https://helm.elastic.co)
+# Namespace : logging
+# ──────────────────────────────────────────────────────────────────────────────
+replicaCount: 1
+
+image: "docker.elastic.co/kibana/kibana"
+imageTag: "8.5.1"
+
+elasticsearchHosts: "http://elasticsearch.logging.svc.cluster.local:9200"
+
+kibanaConfig:
+  kibana.yml: |
+    server.host: "0.0.0.0"
+    elasticsearch.hosts: ["http://elasticsearch.logging.svc.cluster.local:9200"]
+
+# Disable service account token hook — not needed when xpack.security is off
+serviceAccount:
+  create: false
+
+secretMounts: []
+
+resources:
+  requests:
+    cpu:    "50m"
+    memory: "256Mi"
+  limits:
+    cpu:    "300m"
+    memory: "768Mi"
+
+service:
+  type: NodePort
+  port: 5601
+  nodePort: 30601
+
+nodeSelector:
+  kubernetes.io/hostname: k8s-elk-node
+
+nameOverride: "kibana"
+fullnameOverride: "kibana"

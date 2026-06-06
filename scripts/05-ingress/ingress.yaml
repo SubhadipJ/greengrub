@@ -1,0 +1,43 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Ingress  –  nginx-ingress routes ALL external traffic to gateway-service.
+# The gateway handles JWT auth, rate limiting, circuit breaking, and
+# forwards to the correct downstream service.
+# Namespace : services
+# Node public IP : 8.231.105.8
+# No domain configured — traffic hits the node IP directly.
+# When a domain is available, add a host: field and update DNS A record → 8.231.105.8
+# TLS : Uncomment the tls section and add cert-manager ClusterIssuer when ready.
+# ──────────────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: greengrub-ingress
+  namespace: services
+  annotations:
+    kubernetes.io/ingress.class: "nginx"  # deprecated, kept for compatibility
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+    # To enable HTTPS with cert-manager, add:
+    #   cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # and uncomment the tls section below.
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          # All API traffic flows through the gateway service.
+          # Gateway handles: JWT validation, rate limiting, circuit breaking,
+          # X-User-* header injection, and routing to downstream services.
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway-service
+                port:
+                  number: 80
+  # Uncomment once a domain is set and cert-manager is configured:
+  # tls:
+  #   - hosts:
+  #       - YOUR_DOMAIN
+  #     secretName: greengrub-tls

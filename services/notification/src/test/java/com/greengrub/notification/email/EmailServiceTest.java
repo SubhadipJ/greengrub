@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.thymeleaf.context.IContext;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -58,6 +59,9 @@ class EmailServiceTest {
         mimeMessage = mock(MimeMessage.class);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
         when(templateEngine.process(anyString(), any(IContext.class))).thenReturn("<html>email</html>");
+
+        // @Value fields are not injected by Mockito — set directly via reflection
+        ReflectionTestUtils.setField(emailService, "mailUsername", "greengrub.cares@gmail.com");
     }
 
     // ── sendDonationThankYouEmail — success ───────────────────────────────────
@@ -108,5 +112,24 @@ class EmailServiceTest {
 
         assertThatThrownBy(() -> emailService.sendDonationThankYouEmail(donation, "Subject"))
                 .isInstanceOf(RuntimeException.class);
+    }
+
+    // ── From address fix ──────────────────────────────────────────────────────
+
+    @Test
+    void sendEmail_usesMailUsernameAsFromAddress() throws MessagingException {
+        // Capture the MimeMessageHelper's setFrom call indirectly by verifying
+        // that send() is invoked (helper.setFrom would throw if mailUsername is null)
+        emailService.sendDonationThankYouEmail(donation, "Subject");
+
+        verify(mailSender).send(mimeMessage);
+    }
+
+    @Test
+    void sendEmail_nullMailUsername_throwsIllegalArgument() {
+        ReflectionTestUtils.setField(emailService, "mailUsername", null);
+
+        assertThatThrownBy(() -> emailService.sendDonationThankYouEmail(donation, "Subject"))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

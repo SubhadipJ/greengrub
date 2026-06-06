@@ -1,0 +1,66 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Elasticsearch Helm values
+# Chart : elastic/elasticsearch  (https://helm.elastic.co)
+# Namespace : logging
+# Single-node dev setup — scale replicas for production
+# ──────────────────────────────────────────────────────────────────────────────
+replicas: 1
+minimumMasterNodes: 1
+
+clusterName: "greengrub-logs"
+
+image: "docker.elastic.co/elasticsearch/elasticsearch"
+imageTag: "8.5.1"
+
+# Disable security via esConfig
+esConfig:
+  elasticsearch.yml: |
+    xpack.security.enabled: false
+    xpack.security.http.ssl.enabled: false
+    xpack.security.transport.ssl.enabled: false
+
+# Also disable via extraEnvs — overrides chart-level defaults in 8.5.1
+extraEnvs:
+  - name: xpack.security.enabled
+    value: "false"
+  - name: xpack.security.http.ssl.enabled
+    value: "false"
+  - name: xpack.security.transport.ssl.enabled
+    value: "false"
+
+# Use plain HTTP for readiness probe
+protocol: http
+
+resources:
+  requests:
+    cpu:    "100m"
+    memory: "512Mi"
+  limits:
+    cpu:    "400m"
+    memory: "1Gi"
+
+persistence:
+  enabled: true
+  size: "10Gi"
+
+service:
+  type: NodePort
+  port: 9200
+  nodePort: 30920
+
+nameOverride: "elasticsearch"
+fullnameOverride: "elasticsearch"
+
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: "10Gi"
+
+esJavaOpts: "-Xmx512m -Xms512m"
+
+antiAffinity: "soft"
+
+# Pin to worker node to avoid OOM on control-plane (currently at 91% memory)
+nodeSelector:
+  kubernetes.io/hostname: k8s-elk-node

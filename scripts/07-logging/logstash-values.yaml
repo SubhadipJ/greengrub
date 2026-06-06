@@ -1,0 +1,103 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Logstash Helm values
+# Chart : elastic/logstash  (https://helm.elastic.co)
+# Namespace : logging
+# Receives logs from Fluent Bit (Beats protocol on port 24224),
+# parses JSON, and ships to Elasticsearch.
+# ──────────────────────────────────────────────────────────────────────────────
+replicaCount: 1
+
+image: "docker.elastic.co/logstash/logstash"
+imageTag: "8.5.1"
+
+extraEnvs:
+  - name: LS_JAVA_OPTS
+    value: "-Xmx384m -Xms384m"
+
+logstashConfig:
+  logstash.yml: |
+    http.host: "0.0.0.0"
+    xpack.monitoring.enabled: false
+
+logstashPipeline:
+  logstash.conf: |
+    input {
+      beats {
+        port => 24224
+      }
+    }
+
+    filter {
+      if [message] =~ /^\{/ {
+        json {
+          source => "message"
+          target => "parsed"
+        }
+        mutate {
+          rename => { "[parsed][level]"      => "level"      }
+          rename => { "[parsed][logger]"     => "logger"     }
+          rename => { "[parsed][message]"    => "log_message" }
+          rename => { "[parsed][service]"    => "service"    }
+          rename => { "[parsed][traceId]"    => "traceId"    }
+          rename => { "[parsed][spanId]"     => "spanId"     }
+        }
+        mutate { remove_field => ["parsed", "message"] }
+      }
+    }
+
+    output {
+      elasticsearch {
+        hosts    => ["http://elasticsearch.logging.svc.cluster.local:9200"]
+        index    => "greengrub-logs-%{[kubernetes][namespace]}-%{+YYYY.MM.dd}"
+      }
+    }
+
+resources:
+  requests:
+    cpu:    "80m"
+    memory: "300Mi"
+  limits:
+    cpu:    "300m"
+    memory: "768Mi"
+
+
+service:
+  type: ClusterIP
+  ports:
+    - name: beats
+      port: 24224
+      protocol: TCP
+      targetPort: 24224
+    - name: monitoring
+      port: 9600
+      protocol: TCP
+      targetPort: 9600
+
+nodeSelector:
+  kubernetes.io/hostname: k8s-elk-node
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 9600
+  initialDelaySeconds: 360
+  periodSeconds: 15
+  timeoutSeconds: 10
+  failureThreshold: 5
+  successThreshold: 1
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 9600
+  initialDelaySeconds: 360
+  periodSeconds: 15
+  timeoutSeconds: 10
+  failureThreshold: 5
+  successThreshold: 1
+
+persistence:
+  enabled: false
+
+nameOverride: "logstash"
+fullnameOverride: "logstash"
