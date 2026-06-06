@@ -1,0 +1,17 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# services-config ConfigMap  –  inter-service gRPC/HTTP host addresses
+# Namespace : services
+# Fill in values after deploying all services.
+  # Internal ClusterIP DNS names for gRPC calls between services
+  # Format: <service-name>.<namespace>.svc.cluster.local:<grpc-port>
+# ──────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: services-config
+  namespace: services
+data:
+  IMAGE_SERVICE_HOST:    "image-service.services.svc.cluster.local:9095"
+  DONATION_SERVICE_HOST: "donation-service.services.svc.cluster.local:9093"
+  FOOD_SERVICE_HOST:     "food-service.services.svc.cluster.local:9091"
+  CUSTOMER_SERVICE_HOST: "customer-service.services.svc.cluster.local:9092"

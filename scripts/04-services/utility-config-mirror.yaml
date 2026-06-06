@@ -1,0 +1,18 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# utility-config-mirror — ConfigMap in the services namespace
+# This is a mirror of the relevant keys from utility/utility-config.yaml.
+# It exists so Deployment manifests can use configMapKeyRef without projected
+# volumes or init-containers.
+#
+# Keep this in sync with utility/utility-configmap.yaml.
+# Apply after utility-configmap.yaml is applied and Kafka/Redis are running.
+# ──────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: utility-config-mirror
+  namespace: services
+data:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.utility.svc.cluster.local:9092"
+  REDIS_HOST:              "redis.utility.svc.cluster.local"
+  REDIS_PORT:              "6379"

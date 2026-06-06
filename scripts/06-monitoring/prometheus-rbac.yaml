@@ -1,0 +1,44 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Prometheus Cross-Namespace RBAC
+# Grants the kube-prometheus-stack Prometheus service account permission to
+# discover and scrape endpoints in the `services` namespace.
+#
+# The helm release name is `monitoring`, so the service account is:
+#   prometheus-monitoring-kube-prometheus-prometheus  (in monitoring namespace)
+#
+# Apply: kubectl apply -f prometheus-rbac.yaml
+# ──────────────────────────────────────────────────────────────────────────────
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-services-namespace-reader
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - nonResourceURLs: ["/metrics", "/actuator/prometheus"]
+    verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-services-namespace-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind:     ClusterRole
+  name:     prometheus-services-namespace-reader
+subjects:
+  - kind:      ServiceAccount
+    name:      prometheus-monitoring-kube-prometheus-prometheus
+    namespace: monitoring

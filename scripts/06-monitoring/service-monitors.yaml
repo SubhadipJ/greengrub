@@ -1,0 +1,155 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# ServiceMonitors for all GreenGrub microservices
+# Namespace : monitoring  (Prometheus looks for ServiceMonitors here)
+# Label     : release: monitoring  (must match helm release name)
+# Target NS : services
+# ──────────────────────────────────────────────────────────────────────────────
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gateway-service
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      app: gateway-service
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+      metricRelabelings:
+        - sourceLabels: [app]
+          targetLabel: application
+        - sourceLabels: [kubernetes_namespace]
+          targetLabel: namespace
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: customer-service
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      app: customer-service
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+      metricRelabelings:
+        - sourceLabels: [app]
+          targetLabel: application
+        - sourceLabels: [kubernetes_namespace]
+          targetLabel: namespace
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: donation-service
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      app: donation-service
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+      metricRelabelings:
+        - sourceLabels: [app]
+          targetLabel: application
+        - sourceLabels: [kubernetes_namespace]
+          targetLabel: namespace
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: food-service
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      app: food-service
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+      metricRelabelings:
+        - sourceLabels: [app]
+          targetLabel: application
+        - sourceLabels: [kubernetes_namespace]
+          targetLabel: namespace
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: image-service
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      app: image-service
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+      metricRelabelings:
+        - sourceLabels: [app]
+          targetLabel: application
+        - sourceLabels: [kubernetes_namespace]
+          targetLabel: namespace
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: notification-service
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      app: notification-service
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+      metricRelabelings:
+        - sourceLabels: [app]
+          targetLabel: application
+        - sourceLabels: [kubernetes_namespace]
+          targetLabel: namespace

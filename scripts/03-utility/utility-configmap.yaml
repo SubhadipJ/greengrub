@@ -1,0 +1,19 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Utility Namespace — ConfigMap
+# Contains cluster-internal addresses for Kafka and Redis.
+# Kept in the utility namespace alongside those workloads.
+#
+# Services pods read this via cross-namespace RBAC (services-sa).
+# After applying, also populate utility-config-mirror in the services namespace
+# so that deployment env-var references (configMapKeyRef: utility-config-mirror)
+# resolve correctly — see services-config-mirror.yaml.
+# ──────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: utility-config
+  namespace: utility
+data:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.utility.svc.cluster.local:9092"
+  REDIS_HOST:              "redis.utility.svc.cluster.local"
+  REDIS_PORT:              "6379"

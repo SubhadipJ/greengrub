@@ -1,0 +1,113 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Fluent Bit  –  Helm values  (cluster-wide DaemonSet log collector)
+# Chart   : fluent/fluent-bit
+# Release : fluent-bit
+# Namespace: logging
+#
+# Install:
+#   helm repo add fluent https://fluent.github.io/helm-charts
+#   helm repo update
+#   helm install fluent-bit fluent/fluent-bit \
+#     --namespace logging \
+#     --create-namespace \
+#     -f fluentbit-values.yaml
+#
+# Log pipeline:
+#   Service Pod (stdout/stderr)
+#     → Fluent Bit DaemonSet (collect + parse + filter)
+#       → Elasticsearch (store + index)
+#         → Kibana (visualise)
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Run as a DaemonSet so every node's pods are covered
+kind: DaemonSet
+
+# Resource allocation (from resource plan – Logging namespace Fluent Bit row)
+resources:
+  requests:
+    cpu:    "100m"
+    memory: "128Mi"
+  limits:
+    cpu:    "200m"
+    memory: "256Mi"
+
+# Fluent Bit configuration
+config:
+  # ── Inputs ─────────────────────────────────────────────────────────────────
+  inputs: |
+    [INPUT]
+        Name              tail
+        Tag               kube.*
+        Path              /var/log/containers/*.log
+        multiline.parser  docker, cri
+        DB                /var/log/flb_kube.db
+        Mem_Buf_Limit     10MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
+
+  # ── Filters ────────────────────────────────────────────────────────────────
+  filters: |
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix     kube.var.log.containers.
+        Merge_Log           On
+        Keep_Log            Off
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude On
+        Labels              On
+        Annotations         Off
+
+    # Lift kubernetes.* fields to top level (kubernetes_namespace_name etc.)
+    # Required because Fluent Bit v5 record accessor doesn't support nested keys
+    [FILTER]
+        Name         nest
+        Match        kube.*
+        Operation    lift
+        Nested_under kubernetes
+        Add_prefix   kubernetes_
+
+    # Only forward logs from relevant namespaces
+    [FILTER]
+        Name    grep
+        Match   kube.*
+        Regex   kubernetes_namespace_name ^(services|utility|monitoring|logging)$
+
+  # ── Outputs ────────────────────────────────────────────────────────────────
+  outputs: |
+    [OUTPUT]
+        Name                es
+        Match               kube.*
+        Host                elasticsearch.logging.svc.cluster.local
+        Port                9200
+        Logstash_Format     On
+        Logstash_Prefix_Key kubernetes_namespace_name
+        Logstash_DateFormat %Y.%m.%d
+        Retry_Limit         5
+        Suppress_Type_Name  On
+
+  # ── Parsers ────────────────────────────────────────────────────────────────
+  customParsers: |
+    [PARSER]
+        Name         spring_json
+        Format       json
+        Time_Key     @timestamp
+        Time_Format  %Y-%m-%dT%H:%M:%S.%LZ
+
+# RBAC required to read pod metadata across namespaces
+rbac:
+  create:      true
+  nodeAccess:  true
+
+serviceAccount:
+  create: true
+
+# Tolerate all nodes (including tainted nodes) so every log is captured
+tolerations:
+  - operator: Exists
+
+# Priority class to avoid eviction under pressure
+priorityClassName: "system-node-critical"

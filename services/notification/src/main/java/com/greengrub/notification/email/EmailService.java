@@ -6,6 +6,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,10 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
+
+    @Value("${spring.mail.username}")
+    private String mailUsername;
+
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
     public void sendDonationThankYouEmail(Donation donation, String emailSubject) throws MessagingException {
@@ -36,7 +41,7 @@ public class EmailService {
         String htmlContent = templateEngine.process(EmailTemplate.DONATION_CONFIRMATION.getTemplate(), thymeleafContext);
 
         helper.setTo(donation.donorEmail());
-        helper.setFrom(donation.customer().email());
+        helper.setFrom(mailUsername);
         helper.setSubject(emailSubject);
         helper.setText(htmlContent, true);
 

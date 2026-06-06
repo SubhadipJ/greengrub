@@ -1,0 +1,18 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# CORS ConfigMap  –  allowed origins for the gateway service
+# Namespace : services
+#
+# Set CORS_ALLOWED_ORIGINS to the external IP or domain of your ingress.
+# Format: comma-separated origins (no trailing slash)
+# Examples:
+#   Single IP  : "http://34.93.1.2"
+#   Domain     : "https://app.greengrub.com"
+#   Multiple   : "https://app.greengrub.com,https://admin.greengrub.com"
+# ──────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cors-config
+  namespace: services
+data:
+  CORS_ALLOWED_ORIGINS: "<your-ingress-external-ip-or-domain>"
